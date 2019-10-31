@@ -2,18 +2,38 @@
 (*** To proof it we must first proof that ***)
 
 Require Export Coq.ZArith.Zdiv.
+Require Export Coq.Init.Nat.
 Require Export Coq.Strings.String.
+Require Export Coq.Numbers.Natural.Abstract.NDiv.
 
 (*** 
     DH algorithm works basic as an Alice and Bob communication and they
     have some important numbers, they are:
-    
-    Alice's PublicKey, Bob's PublicKey
-    Alice's PrivateKey, Bob's PrivateKey
-    
-    Those keys are used to compute the final key with the equation:
-    
-    SharedSeed = g^
+
+    Alice's PublicKey (A)
+    Bob's PublicKey (B)
+    Alice's PrivateKey (a)
+    Bob's PrivateKey (b)
+
+    Also some other important numbers must exist to make it work:
+    a Prime number (p) 
+    a Base (g) 
+
+    These numbers are not secret, and can be known by anyone in the network.
+    P must be a prime number, and G is a Primitive root modulo.
+
+    Those keys are used to compute other keys and then a shared secret:
+    A = g^a mod p
+    B = g^b mod p
+
+    And then Alice sends it's public key to Bob, and vice versa, so they 
+    compute a shared secret (shared seed) in both sides of the network:
+
+
+    SharedSeed = B^a mod p
+    SharedSeed = A^b mod p
+
+    In notation the prime number may be also called as sharedPrime.
 ***)
 
 
@@ -23,14 +43,17 @@ Fixpoint isEqual (a: string) (b: string) : bool.
 Proof. Admitted.
 
 (** DH Functions **)
-Fixpoint modExp (b : nat) (e : nat) (m : nat): nat.
-Proof. Admitted.
+Fixpoint modExp (base : nat) (exponent : nat) (modulo : nat): nat :=
+(pow base exponent) mod modulo.
 
-Fixpoint calculatePublicKey (private_k : nat) (base : nat) (gen : nat) : nat.
-Proof. Admitted.
+Compute modExp 3 7 (10).
 
-Fixpoint calculateSharedSeed (private_k : nat) (public_k : nat) (base : nat) (gen : nat) : nat.
-Proof. Admitted.
+Fixpoint calculatePublicKey (private_k : nat) (sharedPrime : nat) (gen : nat) : nat :=
+  modExp gen private_k sharedPrime.
+
+Fixpoint calculateSharedSeed (private_k : nat) (public_k : nat) 
+         (sharedPrime : nat) : nat :=
+modExp public_k private_k sharedPrime.
 
 Fixpoint caesarCrypt (seed : nat) (msg_toSend: string) : string.
 Proof. Admitted.
