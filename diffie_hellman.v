@@ -1,7 +1,8 @@
 (*** Completeness proof for Diffie Hellma(DH)n Algorithm ***)
 (*** To proof it we must first proof that ***)
 
-Require export Coq.ZArith.Zdiv.
+Require Export Coq.ZArith.Zdiv.
+Require Export Coq.Strings.String.
 
 (*** 
     DH algorithm works basic as an Alice and Bob communication and they
@@ -18,37 +19,50 @@ Require export Coq.ZArith.Zdiv.
 
 
 (*** Helper functions****)
-Fixpoint isEqual (a: String) (b: String) : Bool
+Fixpoint isEqual (a: string) (b: string) : bool.
+Proof. Admitted.
 
 (** DH Functions **)
 Fixpoint modExp (b : nat) (e : nat) (m : nat): nat.
+Proof. Admitted.
 
-Fixpoint calculatePublicKey (private_k : nat, base : nat, gen : nat) : nat.
+Fixpoint calculatePublicKey (private_k : nat) (base : nat) (gen : nat) : nat.
+Proof. Admitted.
 
-Fixpoint calculateSharedSeed (private_k : nat, public_k : nat, base : nat, gen : nat) : nat.
+Fixpoint calculateSharedSeed (private_k : nat) (public_k : nat) (base : nat) (gen : nat) : nat.
+Proof. Admitted.
 
-Fixpoint caesarCrypt (seed : .nat, msg_toSend: String) : String.
+Fixpoint caesarCrypt (seed : nat) (msg_toSend: string) : string.
+Proof. Admitted.
 
-Fixpoint caesarDecript (seed : .nat, msg_received: String) : String.
-
+Fixpoint caesarDecript (seed : nat) (msg_received: string) : string.
+Proof. Admitted.
 
 (*** Extra: Proof for any symmetric encryption ***)
-Fixpoint symmetricCrypt (seed : .nat, msg_toSend: String) : String.
+Fixpoint symmetricCrypt (seed : nat) (msg_toSend: string) : string.
+Proof. Admitted.
 
-Fixpoint symmetricDecript (seed : .nat, msg_received: String) : String.
+Fixpoint symmetricDecript (seed : nat) (msg_received: string) : string.
+Proof. Admitted.
 
 (*** Extra: Proof for any symmetric encryption ***)
 
-Theorem equalKeys:
+Theorem equalKeys :
     forall (private_k1:nat) (private_k2:nat) (gen:nat) (base:nat), 
-    calculateSharedSeed(private_k1, calculatePublicKey(private_k2, base, gen), base, gen) = calculateSharedSeed(private_k2, calculatePublicKey(private_k1, base, gen), base, gen) 
+    (calculateSharedSeed private_k1 
+      (calculatePublicKey private_k2 base gen) base gen) = 
+    (calculateSharedSeed private_k2 
+      (calculatePublicKey private_k1 base gen) base gen).
+Proof. Admitted.
 
 Theorem DHCorrect:
-    forall message:String, (symmetricDecript( symmetricCrypt (message) )) = message
-
+    forall (message: string) (seed: nat), 
+    (symmetricDecript seed (symmetricCrypt seed message)) = message.
+Proof. Admitted.
 
 Theorem Encrypt_Complete: 
-    forall message: String, caesarCrypt message
+    forall (message: string) (seed: nat), caesarCrypt seed message <> message.
+Proof. Admitted.
 
 (*** https://github.com/coq-contribs/rsa/blob/master/Rsa.v ***)
 
