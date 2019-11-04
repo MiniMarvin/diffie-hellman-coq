@@ -4,6 +4,8 @@
 Require Export Coq.ZArith.Zdiv.
 Require Export Coq.Init.Nat.
 Require Export Coq.Strings.String.
+Require Export Coq.Strings.Ascii.
+
 Require Export Coq.Numbers.Natural.Abstract.NDiv.
 
 (*** 
@@ -43,23 +45,96 @@ Fixpoint isEqual (a: string) (b: string) : bool.
 Proof. Admitted.
 
 (** DH Functions **)
+(** base ˆ exponent mod module **)
 Fixpoint modExp (base : nat) (exponent : nat) (modulo : nat): nat :=
 (pow base exponent) mod modulo.
 
 Compute modExp 3 7 (10).
 
-Fixpoint calculatePublicKey (private_k : nat) (sharedPrime : nat) (gen : nat) : nat :=
-  modExp gen private_k sharedPrime.
+Fixpoint calculatePublicKey (private_key : nat) (sharedPrime : nat) (sharedBase : nat) : nat :=
+  modExp sharedBase private_key sharedPrime.
 
-Fixpoint calculateSharedSeed (private_k : nat) (public_k : nat) 
+Compute calculatePublicKey 3 7 (10).
+
+Fixpoint calculateSharedSeed (private_key : nat) (public_key : nat) 
          (sharedPrime : nat) : nat :=
-modExp public_k private_k sharedPrime.
+modExp public_key private_key sharedPrime.
 
-Fixpoint caesarCrypt (seed : nat) (msg_toSend: string) : string.
-Proof. Admitted.
+Compute length "abc".
 
-Fixpoint caesarDecript (seed : nat) (msg_received: string) : string.
-Proof. Admitted.
+
+
+Fixpoint ceasarCrypt (seed : nat) (s : string) : string :=
+  match s with
+  | EmptyString => EmptyString
+  | String c s' => append (String (ascii_of_nat (((nat_of_ascii c) + seed))) EmptyString) (ceasarCrypt seed s')
+  end
+.
+
+Compute ceasarCrypt 1 "hello world".
+
+Fixpoint ceasarDecrypt (seed : nat) (s: string) : string :=
+  match s with
+  | EmptyString => EmptyString
+  | String c s' => append (String (ascii_of_nat (((nat_of_ascii c) - seed))) EmptyString) (ceasarDecrypt seed s')
+  end.
+
+Compute ceasarDecrypt 1 "ifmmp!xpsme".
+
+
+Theorem decrypt0: forall (message:string), ceasarDecrypt 0 message = message.
+Proof.
+intros.
+induction message.
+              - simpl. reflexivity.
+              - simpl. rewrite Nat.sub_0_r. rewrite IHmessage. rewrite ascii_nat_embedding. reflexivity.
+Qed.
+
+Theorem Aux1: forall (a:ascii) (seed:nat), ascii_of_nat (nat_of_ascii a + S seed - S seed) = a. Admitted.
+
+Theorem ceasarCorrect:
+    forall (message: string) (seed: nat), 
+    (ceasarDecrypt seed (ceasarCrypt seed message)) = message.
+Proof.
+  intros.
+  induction seed.
+  - destruct message.
+    + simpl. reflexivity.
+    + simpl. Search (_ + 0). rewrite Nat.add_0_r. Search (_ - 0). rewrite Nat.sub_0_r.
+      rewrite ascii_nat_embedding. rewrite ascii_nat_embedding.
+      rewrite decrypt0.
+      assert(crypt0: ceasarCrypt 0 message = message).
+      {
+          induction message.
+              - simpl. reflexivity.
+              - simpl. rewrite Nat.add_0_r. rewrite IHmessage. 
+                + rewrite ascii_nat_embedding. reflexivity.
+      }
+      rewrite crypt0. reflexivity.
+
+  - induction message.
+      + simpl. reflexivity.
+      + simpl.
+        assert(H1: (ascii_of_nat (nat_of_ascii (ascii_of_nat (nat_of_ascii a + S seed)) - S seed)) = a).
+        {
+          Search(ascii_of_nat _). rewrite nat_ascii_embedding. 
+          - rewrite Aux1. reflexivity.
+          - admit.
+        }
+        rewrite H1.
+        assert(H2: (ceasarDecrypt (S seed) (ceasarCrypt (S seed) message)) = message). {
+          simpl. rewrite IHmessage. 
+            - reflexivity.
+            - admit.
+        }
+        rewrite H2. reflexivity.
+ 
+            
+
+
+
+
+
 
 (*** Extra: Proof for any symmetric encryption ***)
 Fixpoint symmetricCrypt (seed : nat) (msg_toSend: string) : string.
@@ -93,5 +168,3 @@ Proof. Admitted.
 (*** Extras: Rationalize over DiffieHellman protocol implementations using 
 Protocol Composition Logic, as defined in this paper from stanford university:
 http://seclab.stanford.edu/pcl/papers/rdm-tgc07.pdf ***)
-
-
