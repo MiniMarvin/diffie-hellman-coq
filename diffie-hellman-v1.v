@@ -71,6 +71,34 @@ Compute length "abc".
 
 
 
+Theorem DiffieHelmanCorrectFor2:
+  forall (g: nat) (a: nat) (b: nat),
+  calculateSharedSeed (a) (calculatePublicKey b 2 g) = 
+  calculateSharedSeed (b) (calculatePublicKey a 2 g).
+Proof.
+  intros.
+  induction g, a, b.
+  - reflexivity.
+  - simpl. Search (_ + 0). rewrite Nat.add_0_r. Search (_ ^ _).
+    rewrite Nat.pow_1_l. reflexivity.
+  - simpl. rewrite Nat.add_0_r. rewrite Nat.pow_1_l. reflexivity.
+  - reflexivity.
+  - simpl. reflexivity.
+  - simpl. rewrite Nat.add_0_r. rewrite Nat.pow_1_l.
+    destruct (snd (divmod (S g ^ b + g * S g ^ b) 1 0 1)) eqn:H1.
+    + simpl. reflexivity.
+    + simpl. reflexivity.
+  - simpl. rewrite Nat.add_0_r. rewrite Nat.pow_1_l.
+    destruct (snd (divmod (S g ^ a + g * S g ^ a) 1 0 1)) eqn:H1.
+    + simpl. reflexivity.
+    + simpl. reflexivity.
+  - simpl. destruct (snd (divmod (S g ^ b + g * S g ^ b) 1 0 1)) eqn:H1.
+    + simpl. rewrite Nat.add_0_r. rewrite Nat.pow_1_l.
+      destruct (snd (divmod (S g ^ a + g * S g ^ a) 1 0 1)) eqn:H2.
+      * simpl. rewrite Nat.add_0_r. rewrite Nat.pow_1_l. reflexivity.
+      * simpl. Search ((_ + _) ^ _).
+
+(** Encryption Functions **)
 Fixpoint caesarCrypt (seed : nat) (s : string) : string :=
   match s with
   | EmptyString => EmptyString
@@ -270,6 +298,7 @@ Proof.
   reflexivity.
 Qed.
 
+(** Isso é mesmo verdade? **)
 Lemma getAsciiSimpl : 
   forall (a: ascii) (seed: nat),
   getAscii seed (ascii_of_nat (nat_of_ascii a + seed)) = a.
@@ -280,15 +309,31 @@ Proof.
     Search (ascii_of_nat (nat_of_ascii _)). rewrite ascii_nat_embedding.
     unfold getAscii. simpl. Search (_ - 0). rewrite Nat.sub_0_r.
     rewrite ascii_nat_embedding. reflexivity.
-  - Search (_ + S _). rewrite <- Nat.add_1_r. Search (_ + (_ + _)).
+  - (**rewrite <- IHseed. unfold getAscii.
+    destruct (seed <=? nat_of_ascii (ascii_of_nat (nat_of_ascii a + seed))) eqn:H1. 
+    + destruct (S seed <=?
+      nat_of_ascii
+        (ascii_of_nat
+           (nat_of_ascii
+              (ascii_of_nat
+                 (nat_of_ascii (ascii_of_nat (nat_of_ascii a + seed)) - seed)) +
+            S seed))) eqn:H2.
+      * Search(nat_of_ascii (ascii_of_nat _)). 
+        rewrite nat_ascii_embedding. rewrite nat_ascii_embedding. 
+        rewrite nat_ascii_embedding. 
+        { Search (_ - _). rewrite Nat.add_sub. reflexivity. }
+        {  }
+    **)
+
+    Search (_ + S _). rewrite <- Nat.add_1_r. Search (_ + (_ + _)).
     rewrite Nat.add_assoc. unfold getAscii. 
     destruct (seed + 1 <=? nat_of_ascii (ascii_of_nat (nat_of_ascii a + seed + 1))) eqn:H.
     + unfold ascii_of_nat. unfold nat_of_ascii. unfold ascii_of_N. destruct (N.to_nat (N_of_ascii a) + seed + 1) eqn:H1.
       * simpl. Search (N_of_ascii _). omega.
       * destruct (N.of_nat (S n)) eqn:H2.
         { simpl. inversion H2. }
-        { destruct (N.of_nat (N.to_nat (N_of_ascii (ascii_of_pos p)) - (seed + 1))) eqn:H3.
-
+        { 
+          admit.
         }
 Admitted.
 
@@ -299,9 +344,9 @@ Proof.
   intros.
 
   (** Caminho sobre seed **)
-  induction seed.
+  (**induction seed.
   - rewrite caesarCrypt0. rewrite caesarDecrypt0. reflexivity.
-  - 
+  - **)
 
   (** Caminho sobre message **)
   induction message.
@@ -339,7 +384,9 @@ Proof. Admitted.
 Theorem DHCorrect:
     forall (message: string) (seed: nat), 
     (symmetricDecript seed (symmetricCrypt seed message)) = message.
-Proof. Admitted.
+Proof.
+
+Admitted.
 
 Theorem Encrypt_Complete: 
     forall (message: string) (seed: nat), caesarCrypt seed message <> message.
