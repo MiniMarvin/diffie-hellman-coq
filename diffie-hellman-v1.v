@@ -283,7 +283,13 @@ Proof.
   - Search (_ + S _). rewrite <- Nat.add_1_r. Search (_ + (_ + _)).
     rewrite Nat.add_assoc. unfold getAscii. 
     destruct (seed + 1 <=? nat_of_ascii (ascii_of_nat (nat_of_ascii a + seed + 1))) eqn:H.
-    + simpl.
+    + unfold ascii_of_nat. unfold nat_of_ascii. unfold ascii_of_N. destruct (N.to_nat (N_of_ascii a) + seed + 1) eqn:H1.
+      * simpl. Search (N_of_ascii _). omega.
+      * destruct (N.of_nat (S n)) eqn:H2.
+        { simpl. inversion H2. }
+        { destruct (N.of_nat (N.to_nat (N_of_ascii (ascii_of_pos p)) - (seed + 1))) eqn:H3.
+
+        }
 Admitted.
 
 Theorem caesarCorrect:
